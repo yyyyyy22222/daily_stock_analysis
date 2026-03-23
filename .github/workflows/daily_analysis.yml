@@ -1,16 +1,13 @@
 name: 每日股票分析
 
 on:
-  # 奇葩时间插队法 - 提前3分钟避开拥堵 (周一到周五)
+  # 定时触发 - 每天北京时间 11:33 和 15:03 (周一到周五)
   schedule:
-    # 北京时间 09:57 (UTC 01:57) -> 对应10:00早盘
-    - cron: '57 1 * * 1-5'
-    # 北京时间 11:27 (UTC 03:27) -> 对应11:30午盘
-    - cron: '27 3 * * 1-5'
-    # 北京时间 14:27 (UTC 06:27) -> 对应14:30尾盘异动
-    - cron: '27 6 * * 1-5'
-    # 北京时间 15:27 (UTC 07:27) -> 对应15:30收盘复盘
-    - cron: '27 7 * * 1-5'
+    # 北京时间 11:33 (UTC 03:33) -> 午盘收盘后秒级推送
+    - cron: '33 3 * * 1-5'
+    # 北京时间 15:03 (UTC 07:03) -> 全天收盘后秒级推送
+    - cron: '3 7 * * 1-5'
+  
   # 手动触发
   workflow_dispatch:
     inputs:
@@ -169,7 +166,7 @@ jobs:
           MARKET_REVIEW_REGION: ${{ vars.MARKET_REVIEW_REGION || secrets.MARKET_REVIEW_REGION || 'cn' }}
           
           # ==========================================
-          # 运行配置 ⬅️ 新增！
+          # 运行配置
           # ==========================================
           REPORT_TYPE: ${{ vars.REPORT_TYPE || secrets.REPORT_TYPE || 'simple' }}
           SINGLE_STOCK_NOTIFY: ${{ vars.SINGLE_STOCK_NOTIFY || secrets.SINGLE_STOCK_NOTIFY || 'false' }}
@@ -180,13 +177,10 @@ jobs:
           # ==========================================
           # 系统配置
           # ==========================================
+          TZ: 'Asia/Shanghai'   # 强制系统时区为北京时间
           LOG_LEVEL: INFO
           MAX_WORKERS: ${{ vars.MAX_WORKERS || secrets.MAX_WORKERS || '1' }}
-          # 筹码分布：默认 false（云端接口不稳定）；需启用时在 Settings → Variables 添加 ENABLE_CHIP_DISTRIBUTION=true
           ENABLE_CHIP_DISTRIBUTION: ${{ vars.ENABLE_CHIP_DISTRIBUTION || secrets.ENABLE_CHIP_DISTRIBUTION || 'false' }}
-          # 实时行情数据源优先级（腾讯有量比且稳定，推荐首选）
-          # 可选值: tencent, akshare_sina, efinance, akshare_em, tushare
-          # 如果有 Tushare Pro 高积分账号，可将 tushare 放在首位
           REALTIME_SOURCE_PRIORITY: ${{ vars.REALTIME_SOURCE_PRIORITY || 'tencent,akshare_sina,efinance,akshare_em' }}
           
         run: |
@@ -206,7 +200,7 @@ jobs:
           echo "=========================================="
           echo "🚀 A股自选股智能分析系统"
           echo "=========================================="
-          echo "⏰ 时间: $(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M:%S')"
+          echo "⏰ 时间: $(date '+%Y-%m-%d %H:%M:%S')"
           echo "🎯 运行模式: $MODE"
           echo "📊 自选股: $STOCK_LIST"
           echo "📝 报告类型: $REPORT_TYPE"
